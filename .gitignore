@@ -1,0 +1,24 @@
+# Logs and Data
+/logs/*.log
+/data/packages/
+
+# Dependency directories (vendor)
+/vendor/
+
+# Go workspace file
+go.work
+
+# IDE / Editor
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Build files
+flutterzakhireh
+/flutterzakhireh
+
+# Flutter files
+.dart_tool/
+pubspec.lock

@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  flutterzakhireh:
+    build: .
+    image: flutterzakhireh:latest
+    container_name: flutterzakhireh
+    restart: unless-stopped
+    ports:
+      # Expose port 8811 for proxy and dashboard access
+      - "8811:8811"
+    volumes:
+      # Persist downloaded packages to the host ./data/packages directory
+      - ./data/packages:/data/packages
+    environment:
+      # Configure FlutterZakhireh settings
+      - FLUTTERZAKHIREH_PORT=:8811
+      - FLUTTERZAKHIREH_DATA_DIR=/data/packages
+      # Upstream to fetch packages from (default: pub.dev)
+      - FLUTTERZAKHIREH_UPSTREAM=https://pub.dev
+      # Private package glob patterns (skip sumdb):
+      # - FLUTTER_NO_SUMDB=*.corp.example.com
+      # - FLUTTERZAKHIREH_ALLOW=my_private_pkg,my_other_pkg
+      # - FLUTTERZAKHIREH_DENY=forbidden_pkg
