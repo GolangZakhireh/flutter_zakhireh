@@ -292,18 +292,26 @@ func serveArchive(w http.ResponseWriter, r io.Reader, packageName, version strin
 	}
 }
 
-// resolveUpstreamArchiveURL obtains the upstream archive_url for a version,
-// consulting cached version metadata first, then the upstream API. On failure
-// it writes the HTTP error and returns ok=false.
+// resolveUpstreamArchiveURL obtains the upstream archive_url for a version.
+// Priority:
+//  1. Cached version metadata (archive_url may be rewritten to proxy — reconstructed)
+//  2. Direct URL construction from the known pub.dev pattern (avoids API call)
+//  3. Upstream version metadata API (last resort)
 func (h *ProxyHandler) resolveUpstreamArchiveURL(w http.ResponseWriter, r *http.Request, packageName, version string) (string, bool) {
-	// Prefer cached version metadata (no upstream round-trip).
+	// 1. Prefer cached version metadata (no upstream round-trip).
 	if data, ok, err := h.Storage.GetVersionMeta(packageName, version); err == nil && ok {
 		if url := extractArchiveURL(data); url != "" {
-			return h.absoluteUpstreamURL(url), true
+			return reconstructUpstreamURL(url, h.Fallback, packageName, version), true
 		}
 	}
 
-	// Ask upstream directly.
+	// 2. Construct the upstream archive URL directly from the known pattern.
+	//    This avoids calling the pub.dev version metadata API entirely.
+	if h.Fallback != "" {
+		return fmt.Sprintf("%s/api/archives/%s-%s.tar.gz", strings.TrimSuffix(h.Fallback, "/"), packageName, version), true
+	}
+
+	// 3. Ask upstream directly (last resort).
 	body, ok := h.fetchJSON(w, "/api/packages/%s/versions/%s", packageName, version)
 	if !ok {
 		return "", false
@@ -313,16 +321,37 @@ func (h *ProxyHandler) resolveUpstreamArchiveURL(w http.ResponseWriter, r *http.
 		http.Error(w, "archive URL not found upstream", http.StatusNotFound)
 		return "", false
 	}
-	return h.absoluteUpstreamURL(url), true
+	return absoluteUpstreamURL(url, h.Fallback), true
+}
+
+// reconstructUpstreamURL extracts the upstream URL from a potentially
+// proxy-rewritten archive_url by re-building it from the package name and version.
+func reconstructUpstreamURL(url, fallback, packageName, version string) string {
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		return absoluteUpstreamURL(url, fallback)
+	}
+	if fallback == "" {
+		return url
+	}
+	return fmt.Sprintf("%s/api/archives/%s-%s.tar.gz", strings.TrimSuffix(fallback, "/"), packageName, version)
 }
 
 // absoluteUpstreamURL turns a possibly-relative upstream archive_url into an
 // absolute URL pointing at the upstream host.
-func (h *ProxyHandler) absoluteUpstreamURL(url string) string {
+func absoluteUpstreamURL(url, fallback string) string {
 	if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
 		return url
 	}
-	return strings.TrimSuffix(h.Fallback, "/") + url
+	return strings.TrimSuffix(fallback, "/") + url
+}
+
+// extractArchiveURL pulls archive_url out of a version metadata blob.
+func extractArchiveURL(body []byte) string {
+	var v PubDevVersion
+	if err := json.Unmarshal(body, &v); err != nil {
+		return ""
+	}
+	return v.ArchiveURL
 }
 
 // ---------------------------------------------------------------------------
@@ -415,15 +444,6 @@ func proxyBaseURL(r *http.Request) string {
 		host = x
 	}
 	return scheme + "://" + host
-}
-
-// extractArchiveURL pulls archive_url out of a version metadata blob.
-func extractArchiveURL(body []byte) string {
-	var v PubDevVersion
-	if err := json.Unmarshal(body, &v); err != nil {
-		return ""
-	}
-	return v.ArchiveURL
 }
 
 // persistVersionsFromPackageMeta keeps the legacy versions.txt in sync so the
