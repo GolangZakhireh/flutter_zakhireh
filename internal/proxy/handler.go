@@ -184,32 +184,70 @@ func splitArchiveName(name string) (string, string, bool) {
 // ---------------------------------------------------------------------------
 
 // handlePackageMetadata serves GET /api/packages/<package>.
+//
+// Package listings are MUTABLE upstream (new versions appear over time), so a
+// cache-first strategy goes stale forever once a package is cached (e.g.
+// cached_network_image stuck at 3.4.1 while upstream is at 4.0.2).
+//
+// Strategy: revalidate upstream on every request when an upstream is
+// configured, refresh the cache on success, and fall back to the stale cache
+// when upstream is unreachable (offline mode) or returns 404 for a package we
+// have locally (e.g. manually uploaded private packages).
 func (h *ProxyHandler) handlePackageMetadata(w http.ResponseWriter, r *http.Request, packageName string) {
-	// 1. Serve from cache.
-	if data, ok, err := h.Storage.GetPackageMeta(packageName); err != nil {
+	// Read stale cache (if any) so we can fall back to it on upstream errors.
+	cached, hasCache, err := h.Storage.GetPackageMeta(packageName)
+	if err != nil {
 		http.Error(w, fmt.Sprintf("storage error: %v", err), http.StatusInternalServerError)
 		return
-	} else if ok {
-		writeJSON(w, http.StatusOK, data)
+	}
+
+	// No upstream configured -> pure offline mode, serve cache only.
+	if h.Fallback == "" {
+		if hasCache {
+			writeJSON(w, http.StatusOK, cached)
+			return
+		}
+		http.Error(w, "package not found (no upstream configured)", http.StatusNotFound)
 		return
 	}
 
-	// 2. Fall back to upstream.
-	body, ok := h.fetchJSON(w, "/api/packages/%s", packageName)
-	if !ok {
-		return // error already written
+	// Try upstream first.
+	body, status, fetchErr := h.getUpstreamJSON(fmt.Sprintf("/api/packages/%s", packageName))
+	if fetchErr == nil && status == http.StatusOK {
+		// 3. Rewrite archive_urls so the client downloads archives from us.
+		rewritten := rewritePackageArchiveURLs(body, r)
+
+		// 4. Refresh cache (best-effort).
+		if err := h.Storage.SavePackageMeta(packageName, rewritten); err != nil {
+			slog.Warn("failed to cache package metadata", "package", packageName, "error", err)
+		}
+		h.persistVersionsFromPackageMeta(packageName, rewritten) // keeps dashboard in sync
+
+		writeJSON(w, http.StatusOK, rewritten)
+		return
 	}
 
-	// 3. Rewrite archive_urls so the client downloads archives from us.
-	rewritten := rewritePackageArchiveURLs(body, r)
-
-	// 4. Cache for next time (best-effort).
-	if err := h.Storage.SavePackageMeta(packageName, rewritten); err != nil {
-		slog.Warn("failed to cache package metadata", "package", packageName, "error", err)
+	// Upstream failed: fall back to stale cache when we have it.
+	if hasCache {
+		if fetchErr != nil {
+			slog.Warn("upstream unreachable, serving stale package metadata", "package", packageName, "error", fetchErr)
+		} else {
+			slog.Warn("upstream returned non-OK, serving stale package metadata", "package", packageName, "status", status)
+		}
+		writeJSON(w, http.StatusOK, cached)
+		return
 	}
-	h.persistVersionsFromPackageMeta(packageName, rewritten) // keeps dashboard in sync
 
-	writeJSON(w, http.StatusOK, rewritten)
+	// No cache to fall back to: propagate the upstream error.
+	if fetchErr != nil {
+		http.Error(w, fmt.Sprintf("upstream error: %v", fetchErr), http.StatusBadGateway)
+		return
+	}
+	if status == http.StatusNotFound {
+		http.Error(w, "package not found upstream", http.StatusNotFound)
+		return
+	}
+	http.Error(w, fmt.Sprintf("upstream returned %d", status), http.StatusBadGateway)
 }
 
 // handleVersionMetadata serves GET /api/packages/<package>/versions/<version>.
@@ -357,6 +395,23 @@ func extractArchiveURL(body []byte) string {
 // ---------------------------------------------------------------------------
 // Upstream fetching helper
 // ---------------------------------------------------------------------------
+
+// getUpstreamJSON GETs an upstream JSON metadata endpoint and returns the raw
+// body plus status code without writing anything to the client, so callers can
+// decide whether to fall back to stale cache (offline mode).
+func (h *ProxyHandler) getUpstreamJSON(path string) ([]byte, int, error) {
+	url := strings.TrimSuffix(h.Fallback, "/") + path
+	resp, err := h.HttpClient.Get(url)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
+	return body, resp.StatusCode, nil
+}
 
 // fetchJSON GETs an upstream JSON metadata endpoint. The format string's first
 // verb is the upstream base URL; remaining args are URL path components.
