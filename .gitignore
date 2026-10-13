@@ -22,3 +22,5 @@ flutterzakhireh
 # Flutter files
 .dart_tool/
 pubspec.lock
+
+*.zip
