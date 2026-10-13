@@ -10,12 +10,18 @@ RUN go mod download
 
 # Copy source code and build the binary
 COPY . .
-# CGO_ENABLED=0 ensures a static binary, crucial for running in distroless/scratch
+# CGO_ENABLED=0 ensures a static binary, crucial for running in alpine/scratch
 RUN CGO_ENABLED=0 GOOS=linux go build -o flutterzakhireh ./cmd/server
 
 # Run stage
-# We use distroless static-debian12 for security (no shell, non-root by default support)
-FROM gcr.io/distroless/static-debian12:nonroot
+# We use alpine instead of gcr.io/distroless because gcr.io is blocked
+# in Iran (403 Forbidden). Alpine lives on docker.io, same registry as
+# the golang builder image, so no extra registry dependency.
+FROM alpine:3.20
+
+RUN apk --no-cache add ca-certificates tzdata && \
+    addgroup -S -g 65532 appgroup && \
+    adduser -S -u 65532 -G appgroup appuser
 
 WORKDIR /
 
