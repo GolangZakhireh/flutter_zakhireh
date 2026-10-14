@@ -24,7 +24,11 @@ RUN apk --no-cache add ca-certificates tzdata \
     # script; dart is glibc-linked, hence gcompat on musl-based alpine)
     bash gcompat curl git unzip && \
     addgroup -S -g 65532 appgroup && \
-    adduser -S -u 65532 -G appgroup appuser
+    adduser -S -u 65532 -G appgroup appuser && \
+    # The SDK mount is root-owned while the app runs as 65532; without this
+    # git refuses to run inside /opt/flutter ("dubious ownership").
+    git config --system --add safe.directory /opt/flutter && \
+    git config --system --add safe.directory /opt/dart-sdk
 
 WORKDIR /
 
