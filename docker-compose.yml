@@ -10,10 +10,13 @@ services:
     volumes:
       # Persist downloaded packages to the host ./data/packages directory
       - ./data/packages:/data/packages
+      # Persist uploaded specs, workspaces, outputs, and logs (survives restarts)
+      - ./data/specs:/data/specs
     environment:
       # Configure FlutterZakhireh settings
       - FLUTTERZAKHIREH_PORT=:8811
       - FLUTTERZAKHIREH_DATA_DIR=/data/packages
+      - FLUTTERZAKHIREH_SPECS_DIR=/data/specs
       # Upstream to fetch packages from (default: pub.dev)
       - FLUTTERZAKHIREH_UPSTREAM=https://pub.dev
       # Private package glob patterns (skip sumdb):

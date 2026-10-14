@@ -1,0 +1,15 @@
+# Keep the build context small and hermetic: runtime data, logs, VCS metadata
+# and local artifacts must never enter `COPY . .` layers.
+.git
+.gitignore
+data/
+logs/
+*.zip
+*.log
+flutterzakhireh
+.DS_Store
+.vscode/
+.idea/
+test-flutter/
+screenshots/
+nohup.out

@@ -5,7 +5,7 @@ FROM golang:1.22-alpine AS builder
 WORKDIR /app
 
 # Download dependencies first to leverage Docker cache
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy source code and build the binary
@@ -31,10 +31,12 @@ COPY --from=builder /app/flutterzakhireh /flutterzakhireh
 COPY --from=builder /app/internal/dashboard/templates /internal/dashboard/templates
 
 # Volume configuration
-# The /data/packages directory persists cached Flutter packages.
-# Ensure this directory is writable by the non-root user (UID 65532).
-# When mounting a volume, you may need to set permissions on the host directory:
-# chown -R 65532:65532 ./data/packages
+# /data/packages persists cached Flutter packages.
+# /data/specs persists uploaded specs, workspaces, outputs, and logs.
+# Pre-create both as root so the non-root user can write even without a mount.
+# When bind-mounting host directories, set ownership on the host instead:
+# chown -R 65532:65532 ./data/packages ./data/specs
+RUN mkdir -p /data/packages /data/specs && chown -R 65532:65532 /data
 
 USER 65532:65532
 
@@ -44,6 +46,7 @@ EXPOSE 8811
 # Environment Variables
 ENV FLUTTERZAKHIREH_PORT=:8811
 ENV FLUTTERZAKHIREH_DATA_DIR=/data/packages
+ENV FLUTTERZAKHIREH_SPECS_DIR=/data/specs
 ENV FLUTTERZAKHIREH_UPSTREAM=https://pub.dev
 
 ENTRYPOINT ["/flutterzakhireh"]
