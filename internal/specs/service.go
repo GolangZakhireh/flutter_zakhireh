@@ -590,9 +590,17 @@ func (s *Service) runOne(id string) {
 		Log:       logFile,
 		ServerURL: s.serverURL,
 	})
-
 	if ctx.Err() == context.DeadlineExceeded && genErr == nil {
 		genErr = fmt.Errorf("job timed out after %s", s.timeout)
+	}
+	if genErr != nil {
+		// Surface the cause where the user looks first: append the last
+		// log lines (e.g. the git/pub error) to the recorded message so
+		// the dashboard Error field explains the failure without opening
+		// the full log. Logs stay small (pub output), so a full read is fine.
+		if tail, err := readLogTail(logPath, 1200); err == nil && tail != "" {
+			genErr = fmt.Errorf("%w\nLast log lines:\n%s", genErr, tail)
+		}
 	}
 	exitCode := result.ExitCode
 	if genErr != nil {
@@ -806,4 +814,23 @@ func appendBoundedRuns(runs []Run, r Run, max int) []Run {
 		runs = runs[len(runs)-max:]
 	}
 	return runs
+}
+
+// readLogTail returns up to the last maxBytes of a run log for error context.
+func readLogTail(path string, maxBytes int) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	if len(data) > maxBytes {
+		data = data[len(data)-maxBytes:]
+		// Start at a line boundary when truncated.
+		for i, b := range data {
+			if b == '\n' {
+				data = data[i+1:]
+				break
+			}
+		}
+	}
+	return string(data), nil
 }

@@ -114,6 +114,11 @@ outputs are valid; changed content under the same `name` becomes a new version
 (marked `stale` until it succeeds); a failed update never destroys the last
 good output (staging + atomic promotion).
 
+Failed runs show the cause (last log lines) in the dashboard Error field.
+Note: `git:` dependencies must be clonable without interactive login — no
+GitHub account is used. For private packages, vendor them and upload the
+archive via `POST /upload` (see HOWTO), then depend on the hosted version.
+
 Storage layout (`FLUTTERZAKHIREH_SPECS_DIR`, survives restarts):
 
 ```text

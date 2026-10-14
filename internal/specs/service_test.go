@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -254,6 +255,23 @@ func TestFailedRunRetry(t *testing.T) {
 	}
 	if err := waitStatus(svc, spec.ID, StatusCompleted); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestFailureSurfacesLogTail(t *testing.T) {
+	gen := &fakeGen{}
+	gen.setFail(true)
+	svc := testService(t, gen)
+	spec, _, err := svc.Upload("demo.yaml", []byte(specV1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := waitStatus(svc, spec.ID, StatusFailed); err != nil {
+		t.Fatal(err)
+	}
+	failed, _ := svc.Get(spec.ID)
+	if !strings.Contains(failed.Error, "fake generator failing") {
+		t.Errorf("dashboard error must contain the log cause, got %q", failed.Error)
 	}
 }
 
