@@ -19,6 +19,11 @@
         --text-secondary: #8b949e;
         --accent: #ffffff;
         --accent-dim: rgba(255, 255, 255, 0.1);
+        --green: #3fb950;
+        --red: #f85149;
+        --yellow: #d29922;
+        --blue: #58a6ff;
+        --gray: #8b949e;
       }
       body {
         background-color: var(--bg-color);
@@ -44,9 +49,11 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 40px;
+        margin-bottom: 24px;
         padding-bottom: 20px;
         border-bottom: 1px solid var(--border-color);
+        flex-wrap: wrap;
+        gap: 12px;
       }
       h1 {
         font-size: 24px;
@@ -57,6 +64,11 @@
         align-items: center;
         gap: 10px;
       }
+      h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 16px 0;
+      }
       .badge {
         background: var(--accent);
         color: #000;
@@ -65,20 +77,78 @@
         border-radius: 12px;
         font-weight: 700;
       }
-      input[type="text"] {
+      input[type="text"],
+      input[type="file"] {
         background: var(--bg-color);
         border: 1px solid var(--border-color);
         color: #ffffff;
         padding: 10px 16px;
         border-radius: 6px;
-        width: 300px;
         font-size: 14px;
         font-family: inherit;
+      }
+      input[type="text"] {
+        width: 300px;
       }
       input[type="text"]:focus {
         outline: none;
         border-color: var(--accent);
         box-shadow: 0 0 0 3px var(--accent-dim);
+      }
+      button,
+      .btn {
+        background: #ffffff;
+        color: #000;
+        border: 1px solid #ffffff;
+        padding: 10px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        text-decoration: none;
+        display: inline-block;
+      }
+      button:hover,
+      .btn:hover {
+        opacity: 0.85;
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      button.secondary,
+      .btn.secondary {
+        background: transparent;
+        color: #fff;
+        border: 1px solid var(--border-color);
+        font-weight: 500;
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+      button.danger {
+        background: transparent;
+        color: var(--red);
+        border: 1px solid var(--red);
+        font-weight: 500;
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+      nav.tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+      nav.tabs button {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        font-weight: 500;
+      }
+      nav.tabs button.active {
+        background: #fff;
+        color: #000;
+        border-color: #fff;
       }
       table {
         width: 100%;
@@ -102,18 +172,7 @@
         padding: 16px;
         border-bottom: 1px solid var(--border-color);
         font-size: 14px;
-      }
-      th:first-child {
-        border-top-left-radius: 6px;
-      }
-      th:last-child {
-        border-top-right-radius: 6px;
-      }
-      td:first-child {
-        border-bottom-left-radius: 6px;
-      }
-      td:last-child {
-        border-bottom-right-radius: 6px;
+        vertical-align: top;
       }
       tr:last-child td {
         border-bottom: none;
@@ -121,10 +180,21 @@
       tr:hover {
         background-color: rgba(255, 255, 255, 0.02);
       }
-      .package-name {
+      .package-name,
+      .mono {
         font-family: "JetBrains Mono", monospace;
         color: var(--accent);
         font-weight: 500;
+      }
+      .filename {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+        vertical-align: bottom;
       }
       .versions {
         display: flex;
@@ -148,6 +218,155 @@
         padding: 60px;
         color: var(--text-secondary);
       }
+      .pill {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid;
+      }
+      .pill.Uploaded {
+        color: var(--gray);
+        border-color: var(--gray);
+      }
+      .pill.Queued {
+        color: var(--yellow);
+        border-color: var(--yellow);
+      }
+      .pill.Processing {
+        color: var(--blue);
+        border-color: var(--blue);
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      .pill.Completed {
+        color: var(--green);
+        border-color: var(--green);
+      }
+      .pill.Failed {
+        color: var(--red);
+        border-color: var(--red);
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .stale-flag {
+        color: var(--yellow);
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 6px;
+      }
+      .upload-box {
+        border: 1px dashed var(--border-color);
+        border-radius: 6px;
+        padding: 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .alert {
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        display: none;
+      }
+      .alert.error {
+        display: block;
+        background: rgba(248, 81, 73, 0.1);
+        border: 1px solid var(--red);
+        color: var(--red);
+      }
+      .alert.success {
+        display: block;
+        background: rgba(63, 185, 80, 0.1);
+        border: 1px solid var(--green);
+        color: var(--green);
+      }
+      .alert.info {
+        display: block;
+        background: rgba(88, 166, 255, 0.1);
+        border: 1px solid var(--blue);
+        color: var(--blue);
+      }
+      .detail-row td {
+        background: rgba(255, 255, 255, 0.02);
+        font-size: 13px;
+      }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 6px 12px;
+        margin-bottom: 12px;
+      }
+      .detail-grid dt {
+        color: var(--text-secondary);
+      }
+      .detail-grid dd {
+        margin: 0;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        word-break: break-all;
+      }
+      .error-text {
+        color: var(--red);
+        font-size: 13px;
+        margin: 8px 0;
+      }
+      pre.logs {
+        background: #0d1117;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 12px;
+        max-height: 300px;
+        overflow: auto;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .section {
+        margin-bottom: 40px;
+      }
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px 12px;
+        }
+        input[type="text"] {
+          width: 100%;
+        }
+        table,
+        thead,
+        tbody,
+        th,
+        td,
+        tr {
+          display: block;
+        }
+        thead {
+          display: none;
+        }
+        td {
+          border-bottom: none;
+          padding: 8px 16px;
+        }
+        tr {
+          border-bottom: 1px solid var(--border-color);
+        }
+      }
     </style>
   </head>
   <body>
@@ -159,47 +378,163 @@
           id="search"
           placeholder="Search packages..."
           onkeyup="filterPackages()"
+          aria-label="Search packages"
         />
       </header>
 
-      <div id="package-list">
-        {{if .}}
-        <table>
-          <thead>
-            <tr>
-              <th width="40%">Package</th>
-              <th width="35%">Versions</th>
-              <th width="10%">Size</th>
-              <th width="15%">Last Updated</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{range .}}
-            <tr class="package-row">
-              <td><div class="package-name">{{.Name}}</div></td>
-              <td>
-                <div class="versions">
-                  {{range .Versions}}<span class="tag">{{.}}</span>{{end}}
-                </div>
-              </td>
-              <td class="meta">{{humanBytes .Size}}</td>
-              <td class="meta">{{.UpdatedAt.Format "2006-01-02 15:04"}}</td>
-            </tr>
-            {{end}}
-          </tbody>
-        </table>
-        {{else}}
-        <div class="empty-state">
-          <p>No packages cached yet.</p>
-          <p style="font-size: 12px; margin-top: 10px">
-            Run <code>flutter pub get</code> to populate the cache.
-          </p>
+      <nav class="tabs" aria-label="Dashboard sections">
+        <button id="tab-packages" class="active" onclick="showSection('packages')">
+          Packages
+        </button>
+        <button id="tab-specs" onclick="showSection('specs')">
+          Specifications{{if .SpecCount}} ({{.SpecCount}}){{end}}
+        </button>
+      </nav>
+
+      <div id="section-packages" class="section">
+        <div id="package-list">
+          {{if .Packages}}
+          <table>
+            <thead>
+              <tr>
+                <th width="40%">Package</th>
+                <th width="35%">Versions</th>
+                <th width="10%">Size</th>
+                <th width="15%">Last Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Packages}}
+              <tr class="package-row">
+                <td><div class="package-name">{{.Name}}</div></td>
+                <td>
+                  <div class="versions">
+                    {{range .Versions}}<span class="tag">{{.}}</span>{{end}}
+                  </div>
+                </td>
+                <td class="meta">{{humanBytes .Size}}</td>
+                <td class="meta">{{.UpdatedAt.Format "2006-01-02 15:04"}}</td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+          {{else}}
+          <div class="empty-state">
+            <p>No packages cached yet.</p>
+            <p style="font-size: 12px; margin-top: 10px">
+              Run <code>flutter pub get</code> to populate the cache.
+            </p>
+          </div>
+          {{end}}
         </div>
-        {{end}}
+      </div>
+
+      <div id="section-specs" class="section" style="display: none">
+        <h2>Specification Files</h2>
+        <p class="meta" style="margin-top: -8px; margin-bottom: 16px">
+          Upload a POP Spec YAML file. Parity prepares an example project,
+          resolves dependencies through this proxy, and records the result. No
+          repository access required.
+        </p>
+
+        <div id="spec-alert" class="alert" role="alert"></div>
+
+        <div class="upload-box">
+          <input
+            type="file"
+            id="spec-file"
+            accept=".yaml,.yml"
+            aria-label="Choose a POP Spec YAML file"
+          />
+          <button id="spec-upload-btn" onclick="uploadSpec()">Upload &amp; Generate</button>
+          <span class="meta">.yaml / .yml, max 1 MiB</span>
+        </div>
+
+        <div id="spec-list">
+          {{if .Specs}}
+          <table aria-label="Uploaded specifications">
+            <thead>
+              <tr>
+                <th>File</th>
+                <th>Status</th>
+                <th>Uploaded</th>
+                <th>Last Attempt</th>
+                <th>Last Success</th>
+                <th>Output</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="spec-rows">
+              {{range .Specs}}
+              <tr class="spec-row" data-id="{{.ID}}">
+                <td>
+                  <span class="filename" title="{{.OriginalFilename}}">{{.OriginalFilename}}</span>
+                  <div class="meta mono" style="font-size: 11px">{{.Name}} · {{.ID}}</div>
+                </td>
+                <td>
+                  <span class="pill {{.Status}}">{{.Status}}</span>
+                  {{if .Stale}}<span class="stale-flag" title="Content changed since last success">stale</span>{{end}}
+                </td>
+                <td class="meta">{{.UploadedAt.Format "2006-01-02 15:04"}}</td>
+                <td class="meta">{{if .LastAttemptAt}}{{.LastAttemptAt.Format "2006-01-02 15:04"}}{{else}}—{{end}}</td>
+                <td class="meta">{{if .LastSuccessAt}}{{.LastSuccessAt.Format "2006-01-02 15:04"}}{{else}}—{{end}}</td>
+                <td class="meta spec-output">
+                  {{if .Output}}{{len .Output.Packages}} pkgs{{else}}—{{end}}
+                </td>
+                <td>
+                  <div class="actions">
+                    <button class="secondary" onclick="toggleDetail('{{.ID}}')">Details</button>
+                    <button class="secondary" onclick="retrySpec('{{.ID}}')">Retry</button>
+                    <button class="danger" onclick="deleteSpec('{{.ID}}')">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+          {{else}}
+          <div class="empty-state" id="spec-empty">
+            <p>No specifications uploaded yet.</p>
+            <p style="font-size: 12px; margin-top: 10px">
+              Upload a POP Spec <code>.yaml</code> file to generate packages.
+            </p>
+          </div>
+          <table aria-label="Uploaded specifications" style="display: none">
+            <thead>
+              <tr>
+                <th>File</th>
+                <th>Status</th>
+                <th>Uploaded</th>
+                <th>Last Attempt</th>
+                <th>Last Success</th>
+                <th>Output</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="spec-rows"></tbody>
+          </table>
+          {{end}}
+        </div>
       </div>
     </div>
 
     <script>
+      function showSection(name) {
+        document.getElementById("section-packages").style.display =
+          name === "packages" ? "" : "none";
+        document.getElementById("section-specs").style.display =
+          name === "specs" ? "" : "none";
+        document.getElementById("tab-packages").classList.toggle(
+          "active",
+          name === "packages",
+        );
+        document.getElementById("tab-specs").classList.toggle(
+          "active",
+          name === "specs",
+        );
+        if (name === "specs") refreshSpecs();
+      }
+
       function filterPackages() {
         const input = document.getElementById("search");
         const filter = input.value.toLowerCase();
@@ -226,6 +561,249 @@
           }
         }
       });
+
+      // ---- Specifications ----
+      function specAlert(kind, msg) {
+        const el = document.getElementById("spec-alert");
+        el.className = "alert " + kind;
+        el.textContent = msg;
+      }
+
+      function clearAlert() {
+        const el = document.getElementById("spec-alert");
+        el.className = "alert";
+        el.textContent = "";
+      }
+
+      function esc(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function fmtTime(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        if (isNaN(d)) return "—";
+        return d.toLocaleString();
+      }
+
+      async function uploadSpec() {
+        clearAlert();
+        const input = document.getElementById("spec-file");
+        const btn = document.getElementById("spec-upload-btn");
+        if (!input.files || input.files.length === 0) {
+          specAlert("error", "Choose a .yaml or .yml file first.");
+          return;
+        }
+        const file = input.files[0];
+        if (!/\.ya?ml$/i.test(file.name)) {
+          specAlert("error", "Unsupported extension: upload a .yaml or .yml file.");
+          return;
+        }
+        btn.disabled = true;
+        specAlert("info", "Uploading " + file.name + " …");
+        try {
+          const form = new FormData();
+          form.append("spec", file, file.name);
+          const resp = await fetch("/api/specs", { method: "POST", body: form });
+          const body = await resp.json().catch(() => ({}));
+          if (resp.status === 201) {
+            specAlert("success", "Uploaded. Generation queued.");
+          } else if (resp.status === 200 && body.deduped) {
+            specAlert("success", "Identical content already processed — no regeneration needed.");
+          } else if (resp.status === 409) {
+            specAlert("info", "This exact version is already being processed.");
+          } else {
+            specAlert("error", (body && body.error) || "Upload failed (" + resp.status + ").");
+          }
+        } catch (e) {
+          specAlert("error", "Upload failed: backend unreachable.");
+        } finally {
+          btn.disabled = false;
+          input.value = "";
+          await refreshSpecs();
+        }
+      }
+
+      function specRowHtml(s) {
+        const stale = s.stale ? '<span class="stale-flag" title="Content changed since last success">stale</span>' : "";
+        const output =
+          s.output && s.output.packages
+            ? esc(s.output.packages.length) + " pkgs"
+            : "—";
+        return (
+          "<td><span class=\"filename\" title=\"" + esc(s.original_filename) + "\">" +
+          esc(s.original_filename) +
+          "</span><div class=\"meta mono\" style=\"font-size:11px\">" +
+          esc(s.name) + " · " + esc(s.id) +
+          "</div></td>" +
+          "<td><span class=\"pill " + esc(s.status) + "\">" + esc(s.status) + "</span>" + stale + "</td>" +
+          "<td class=\"meta\">" + esc(fmtTime(s.uploaded_at)) + "</td>" +
+          "<td class=\"meta\">" + esc(fmtTime(s.last_attempt_at)) + "</td>" +
+          "<td class=\"meta\">" + esc(fmtTime(s.last_success_at)) + "</td>" +
+          "<td class=\"meta\">" + output + "</td>" +
+          "<td><div class=\"actions\">" +
+          "<button class=\"secondary\" onclick=\"toggleDetail('" + esc(s.id) + "')\">Details</button>" +
+          "<button class=\"secondary\" onclick=\"retrySpec('" + esc(s.id) + "')\">Retry</button>" +
+          "<button class=\"danger\" onclick=\"deleteSpec('" + esc(s.id) + "')\">Delete</button>" +
+          "</div></td>"
+        );
+      }
+
+      async function refreshSpecs() {
+        let tbody = document.getElementById("spec-rows");
+        if (!tbody) return;
+        try {
+          const resp = await fetch("/api/specs");
+          if (!resp.ok) return;
+          const body = await resp.json();
+          const specs = (body && body.specs) || [];
+          const table = tbody.closest("table");
+          const empty = document.getElementById("spec-empty");
+          // Rebuild rows, preserving open detail panels.
+          const open = new Set(
+            Array.from(document.querySelectorAll("tr.detail-row")).map((r) =>
+              r.getAttribute("data-for"),
+            ),
+          );
+          document.querySelectorAll("tr.detail-row").forEach((r) => r.remove());
+          tbody.innerHTML = "";
+          specs.forEach((s) => {
+            const tr = document.createElement("tr");
+            tr.className = "spec-row";
+            tr.setAttribute("data-id", s.id);
+            tr.innerHTML = specRowHtml(s);
+            tbody.appendChild(tr);
+          });
+          const has = specs.length > 0;
+          if (table) table.style.display = has ? "" : "none";
+          if (empty) empty.style.display = has ? "none" : "";
+          const tab = document.getElementById("tab-specs");
+          if (tab) tab.textContent = "Specifications (" + specs.length + ")";
+          open.forEach((id) => {
+            if (specs.some((s) => s.id === id)) insertDetailRow(id);
+          });
+        } catch (e) {
+          /* polling is best-effort; keep last rendered state */
+        }
+      }
+
+      function detailRowHtml(d) {
+        const s = d.spec || {};
+        let runs = "";
+        (s.runs || []).slice().reverse().forEach((r) => {
+          runs +=
+            "<tr><td class=\"mono\">" + esc(r.id) + "</td><td>" + esc(r.status) +
+            "</td><td class=\"meta\">" + esc(fmtTime(r.started_at)) + "</td><td>" +
+            (r.exit_code == null ? "—" : esc(r.exit_code)) + "</td><td>" +
+            "<button class=\"secondary\" onclick=\"showLog('" + esc(s.id) + "','" + esc(r.id) + "')\">View log</button></td></tr>";
+        });
+        if (!runs) runs = "<tr><td colspan=\"5\" class=\"meta\">No runs yet.</td></tr>";
+        const out = s.output
+          ? "<div class=\"meta\">" + esc((s.output.packages || []).length) + " packages · run " +
+            esc(s.output.run_id) + ' · <a style="color:#fff" href="/api/specs/' + esc(s.id) + '/outputs/download">download .tar.gz</a></div>' +
+            '<div class="mono" style="font-size:12px">' + (s.output.packages || []).map(esc).join(", ") + "</div>"
+          : '<div class="meta">No successful output yet.</div>';
+        return (
+          "<td colspan=\"7\"><div class=\"detail-grid\">" +
+          "<dt>Status</dt><dd>" + esc(s.status) + (s.stale ? " (stale — content changed since last success)" : "") + "</dd>" +
+          "<dt>Spec ID</dt><dd>" + esc(s.id) + "</dd>" +
+          "<dt>Content</dt><dd>" + esc(s.current_hash) + (d.changed_since_success ? " (changed since last success)" : "") + "</dd>" +
+          "<dt>Uploaded</dt><dd>" + esc(fmtTime(s.uploaded_at)) + "</dd>" +
+          (s.error ? "<dt>Error</dt><dd class=\"error-text\">" + esc(s.error) + "</dd>" : "") +
+          "</div>" +
+          "<h3 style=\"font-size:14px;margin:12px 0 8px\">Runs</h3>" +
+          "<table><thead><tr><th>Run</th><th>Status</th><th>Started</th><th>Exit</th><th>Log</th></tr></thead><tbody>" +
+          runs + "</tbody></table>" +
+          "<h3 style=\"font-size:14px;margin:12px 0 8px\">Output</h3>" + out +
+          '<pre class="logs" id="log-' + esc(s.id) + '" style="display:none"></pre>' +
+          "</td>"
+        );
+      }
+
+      async function insertDetailRow(id) {
+        const row = document.querySelector('tr.spec-row[data-id="' + id + '"]');
+        if (!row || row.nextElementSibling?.classList?.contains("detail-row")) return;
+        try {
+          const resp = await fetch("/api/specs/" + encodeURIComponent(id));
+          if (!resp.ok) {
+            specAlert("error", "Could not load details (" + resp.status + ").");
+            return;
+          }
+          const body = await resp.json();
+          const tr = document.createElement("tr");
+          tr.className = "detail-row";
+          tr.setAttribute("data-for", id);
+          tr.innerHTML = detailRowHtml(body);
+          row.after(tr);
+        } catch (e) {
+          specAlert("error", "Could not load details: backend unreachable.");
+        }
+      }
+
+      async function toggleDetail(id) {
+        const existing = document.querySelector('tr.detail-row[data-for="' + id + '"]');
+        if (existing) {
+          existing.remove();
+          return;
+        }
+        await insertDetailRow(id);
+      }
+
+      async function showLog(specId, runId) {
+        const pre = document.getElementById("log-" + specId);
+        if (!pre) return;
+        pre.style.display = "";
+        pre.textContent = "Loading log …";
+        try {
+          const resp = await fetch(
+            "/api/specs/" + encodeURIComponent(specId) + "/logs?run=" + encodeURIComponent(runId),
+          );
+          pre.textContent = resp.ok ? await resp.text() : "Log not available (" + resp.status + ").";
+        } catch (e) {
+          pre.textContent = "Log not available: backend unreachable.";
+        }
+      }
+
+      async function retrySpec(id) {
+        clearAlert();
+        try {
+          const resp = await fetch("/api/specs/" + encodeURIComponent(id) + "/retry", { method: "POST" });
+          if (resp.status === 202) specAlert("success", "Regeneration queued.");
+          else if (resp.status === 409) specAlert("info", "A job is already queued or running for this version.");
+          else if (resp.status === 404) specAlert("error", "Spec no longer exists.");
+          else specAlert("error", "Retry failed (" + resp.status + ").");
+        } catch (e) {
+          specAlert("error", "Retry failed: backend unreachable.");
+        }
+        await refreshSpecs();
+      }
+
+      async function deleteSpec(id) {
+        const row = document.querySelector('tr.spec-row[data-id="' + id + '"]');
+        const name = row ? row.querySelector(".filename")?.textContent : id;
+        if (!window.confirm('Delete "' + name + '" and all its generated data? This cannot be undone.')) return;
+        clearAlert();
+        try {
+          const resp = await fetch("/api/specs/" + encodeURIComponent(id), { method: "DELETE" });
+          if (resp.status === 204 || resp.status === 200) specAlert("success", "Specification deleted.");
+          else if (resp.status === 404) specAlert("error", "Spec no longer exists.");
+          else specAlert("error", "Delete failed (" + resp.status + ").");
+        } catch (e) {
+          specAlert("error", "Delete failed: backend unreachable.");
+        }
+        await refreshSpecs();
+      }
+
+      // Poll for status updates while jobs run (paused when tab hidden).
+      setInterval(() => {
+        if (document.hidden) return;
+        if (document.getElementById("section-specs").style.display === "none") return;
+        refreshSpecs();
+      }, 5000);
     </script>
   </body>
 </html>

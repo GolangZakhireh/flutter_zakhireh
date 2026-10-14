@@ -5,23 +5,34 @@ import (
 	"html/template"
 	"net/http"
 
+	"flutterzakhireh/internal/specs"
 	"flutterzakhireh/internal/storage"
 )
 
-// DashboardHandler serves the web dashboard showing cached packages.
+// DashboardData is the view model for the combined packages + specs page.
+type DashboardData struct {
+	Packages  []storage.Package
+	Specs     []*specs.Spec
+	SpecCount int
+}
+
+// DashboardHandler serves the web dashboard showing cached packages and
+// managed POP Spec files.
 type DashboardHandler struct {
 	Storage storage.Backend
+	Specs   *specs.Service
 	Tmpl    *template.Template
 }
 
 // NewDashboardHandler creates a dashboard handler with pre-loaded HTML templates.
-func NewDashboardHandler(store storage.Backend) *DashboardHandler {
+func NewDashboardHandler(store storage.Backend, svc *specs.Service) *DashboardHandler {
 	funcMap := template.FuncMap{
 		"humanBytes": humanBytes,
 	}
 
 	return &DashboardHandler{
 		Storage: store,
+		Specs:   svc,
 		Tmpl: template.Must(template.New("index.html").Funcs(funcMap).ParseFiles(
 			"internal/dashboard/templates/index.html",
 		)),
@@ -42,7 +53,8 @@ func humanBytes(b int64) string {
 	return fmt.Sprintf("%.1f %cib", float64(b)/float64(div), "KMGTPE"[exp])
 }
 
-// ServeHTTP renders the dashboard page with a list of all cached packages.
+// ServeHTTP renders the dashboard page with cached packages and spec records.
+// Spec listing is best-effort: a specs failure never hides the package cache.
 func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var packages []storage.Package
 
@@ -56,5 +68,13 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Tmpl.Execute(w, packages)
+	data := DashboardData{Packages: packages}
+	if h.Specs != nil {
+		if list, err := h.Specs.List(); err == nil {
+			data.Specs = list
+			data.SpecCount = len(list)
+		}
+	}
+
+	h.Tmpl.Execute(w, data)
 }
