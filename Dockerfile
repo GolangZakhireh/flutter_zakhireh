@@ -19,7 +19,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o flutterzakhireh ./cmd/server
 # the golang builder image, so no extra registry dependency.
 FROM alpine:3.20
 
-RUN apk --no-cache add ca-certificates tzdata && \
+RUN apk --no-cache add ca-certificates tzdata \
+    # Runtime deps for a host-mounted Flutter/Dart SDK (flutter is a bash
+    # script; dart is glibc-linked, hence gcompat on musl-based alpine)
+    bash gcompat curl git unzip && \
     addgroup -S -g 65532 appgroup && \
     adduser -S -u 65532 -G appgroup appuser
 
