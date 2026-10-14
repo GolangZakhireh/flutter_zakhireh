@@ -38,7 +38,9 @@ COPY --from=builder /app/internal/dashboard/templates /internal/dashboard/templa
 # chown -R 65532:65532 ./data/packages ./data/specs
 # (/logs is the default file-log location for CWD /; override with
 # FLUTTERZAKHIREH_LOG_DIR or mount ./logs:/logs)
-RUN mkdir -p /data/packages /data/specs /logs && chown -R 65532:65532 /data /logs
+# (/data/pub-cache and /data/home give flutter/dart writable HOME and pub
+# cache when an SDK is mounted from the host; see docker-compose.yml)
+RUN mkdir -p /data/packages /data/specs /data/pub-cache /data/home /logs && chown -R 65532:65532 /data /logs
 
 USER 65532:65532
 

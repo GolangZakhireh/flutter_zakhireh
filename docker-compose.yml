@@ -12,11 +12,20 @@ services:
       - ./data/packages:/data/packages
       # Persist uploaded specs, workspaces, outputs, and logs (survives restarts)
       - ./data/specs:/data/specs
+      # To enable spec generation, mount a Flutter/Dart SDK from the host
+      # (read-only) at one of the auto-detected paths, e.g.:
+      # - /opt/flutter:/opt/flutter:ro
+      # - /opt/dart-sdk:/opt/dart-sdk:ro
     environment:
       # Configure FlutterZakhireh settings
       - FLUTTERZAKHIREH_PORT=:8811
       - FLUTTERZAKHIREH_DATA_DIR=/data/packages
       - FLUTTERZAKHIREH_SPECS_DIR=/data/specs
+      # Writable HOME and pub cache for SDK runs inside the container
+      - HOME=/data/home
+      - PUB_CACHE=/data/pub-cache
+      # Or point at the SDK explicitly:
+      # - FLUTTERZAKHIREH_FLUTTER_BIN=/opt/flutter/bin/flutter
       # Upstream to fetch packages from (default: pub.dev)
       - FLUTTERZAKHIREH_UPSTREAM=https://pub.dev
       # Private package glob patterns (skip sumdb):

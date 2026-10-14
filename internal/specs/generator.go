@@ -112,8 +112,9 @@ type RunError struct {
 func (e *RunError) Error() string { return e.Msg }
 
 // resolveBin picks the dependency-resolution binary: explicit override,
-// then flutter, then dart. A clear error (not a fake success) is returned
-// when neither SDK is installed.
+// then PATH lookup (flutter, then dart), then well-known mount points used
+// by the Docker setup (/opt/flutter, /opt/dart-sdk, /usr/lib/dart). A clear
+// error (not a fake success) is returned when no SDK is installed.
 func resolveBin(override string) (string, error) {
 	if override != "" {
 		if _, err := os.Stat(override); err == nil {
@@ -126,6 +127,15 @@ func resolveBin(override string) (string, error) {
 	}
 	for _, name := range []string{"flutter", "dart"} {
 		if p, err := exec.LookPath(name); err == nil {
+			return p, nil
+		}
+	}
+	for _, p := range []string{
+		"/opt/flutter/bin/flutter",
+		"/opt/dart-sdk/bin/dart",
+		"/usr/lib/dart/bin/dart",
+	} {
+		if st, err := os.Stat(p); err == nil && !st.IsDir() {
 			return p, nil
 		}
 	}
