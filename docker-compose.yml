@@ -13,9 +13,12 @@ services:
       # Persist uploaded specs, workspaces, outputs, and logs (survives restarts)
       - ./data/specs:/data/specs
       # To enable spec generation, mount a Flutter/Dart SDK from the host
-      # (read-only) at one of the auto-detected paths, e.g.:
-      # - /opt/flutter:/opt/flutter:ro
-      # - /opt/dart-sdk:/opt/dart-sdk:ro
+      # at one of the auto-detected paths, e.g.:
+      # - /opt/flutter:/opt/flutter
+      # - /opt/dart-sdk:/opt/dart-sdk
+      # NOTE: the mount must be writable (no :ro): flutter refreshes engine
+      # stamps inside its own cache dir. Give the app user ownership on the
+      # host once: chown -R 65532:65532 /opt/flutter
     environment:
       # Configure FlutterZakhireh settings
       - FLUTTERZAKHIREH_PORT=:8811
