@@ -36,7 +36,9 @@ COPY --from=builder /app/internal/dashboard/templates /internal/dashboard/templa
 # Pre-create both as root so the non-root user can write even without a mount.
 # When bind-mounting host directories, set ownership on the host instead:
 # chown -R 65532:65532 ./data/packages ./data/specs
-RUN mkdir -p /data/packages /data/specs && chown -R 65532:65532 /data
+# (/logs is the default file-log location for CWD /; override with
+# FLUTTERZAKHIREH_LOG_DIR or mount ./logs:/logs)
+RUN mkdir -p /data/packages /data/specs /logs && chown -R 65532:65532 /data /logs
 
 USER 65532:65532
 

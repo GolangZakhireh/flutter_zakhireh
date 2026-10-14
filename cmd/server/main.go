@@ -20,26 +20,29 @@ import (
 )
 
 func main() {
-	// Ensure /logs directory exists
-	logDir := "logs"
-	if _, err := os.Stat(logDir); os.IsNotExist(err) {
-		if err := os.Mkdir(logDir, 0755); err != nil {
-			log.Fatalf("Failed to create log directory: %v", err)
+	// File logging is best-effort: if the log directory cannot be created
+	// (e.g. read-only working directory in a container), the server still
+	// starts with stdout-only logging (captured by `docker logs`).
+	// Override with FLUTTERZAKHIREH_LOG_DIR; empty disables file logging.
+	logDest := io.Writer(os.Stdout)
+	if logDir := os.Getenv("FLUTTERZAKHIREH_LOG_DIR"); logDir != "off" {
+		if logDir == "" {
+			logDir = "logs"
+		}
+		if err := os.MkdirAll(logDir, 0755); err != nil {
+			fmt.Fprintf(os.Stderr, "WARNING: cannot create log directory %q: %v; using stdout only\n", logDir, err)
+		} else {
+			timestamp := time.Now().Format("2006-01-02_15-04-05")
+			logFileName := filepath.Join(logDir, fmt.Sprintf("flutterzakhireh_%s.log", timestamp))
+			if logFile, err := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err != nil {
+				fmt.Fprintf(os.Stderr, "WARNING: cannot open log file %q: %v; using stdout only\n", logFileName, err)
+			} else {
+				defer logFile.Close()
+				logDest = io.MultiWriter(os.Stdout, logFile)
+			}
 		}
 	}
-
-	// Create log file with timestamp
-	timestamp := time.Now().Format("2006-01-02_15-04-05")
-	logFileName := filepath.Join(logDir, fmt.Sprintf("flutterzakhireh_%s.log", timestamp))
-	logFile, err := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("Failed to open log file: %v", err)
-	}
-	defer logFile.Close()
-
-	// Set up multi-writer for logging to both terminal and log file
-	multiWriter := io.MultiWriter(os.Stdout, logFile)
-	log.SetOutput(multiWriter)
+	log.SetOutput(logDest)
 
 	// Print ASCII banner
 	log.Println(`
@@ -85,6 +88,9 @@ func main() {
 	// Handlers
 	proxyHandler := proxy.NewProxyHandler(store, cfg.UpstreamProxy, validator)
 	uploadHandler := upload.NewUploadHandler(store)
+	if _, err := os.Stat("internal/dashboard/templates/index.html"); err != nil {
+		log.Fatalf("dashboard template missing (run from the repository root): %v", err)
+	}
 	dashboardHandler := dashboard.NewDashboardHandler(store, specService)
 	specHandler := specs.NewHandler(specService, cfg.MaxSpecUploadBytes)
 	specHandler.Register(mux)
