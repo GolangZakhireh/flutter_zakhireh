@@ -27,6 +27,9 @@ services:
       # Writable HOME and pub cache for SDK runs inside the container
       - HOME=/data/home
       - PUB_CACHE=/data/pub-cache
+      # Artifact mirror for SDK downloads (empty/override when Google is blocked,
+      # e.g. FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn in .env)
+      - FLUTTER_STORAGE_BASE_URL=${FLUTTER_STORAGE_BASE_URL:-https://storage.googleapis.com}
       # Or point at the SDK explicitly:
       # - FLUTTERZAKHIREH_FLUTTER_BIN=/opt/flutter/bin/flutter
       # Upstream to fetch packages from (default: pub.dev)
