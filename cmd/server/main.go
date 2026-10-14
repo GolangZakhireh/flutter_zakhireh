@@ -14,6 +14,7 @@ import (
 	"flutterzakhireh/internal/dashboard"
 	"flutterzakhireh/internal/proxy"
 	"flutterzakhireh/internal/server"
+	"flutterzakhireh/internal/specs"
 	"flutterzakhireh/internal/storage"
 	"flutterzakhireh/internal/upload"
 )
@@ -60,6 +61,22 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Initialize spec management (Parity file-based workflow)
+	specStore := specs.NewStore(cfg.SpecsDir)
+	if err := specStore.Init(); err != nil {
+		slog.Error("failed to init spec storage", "error", err)
+		os.Exit(1)
+	}
+	specService := specs.NewService(specStore, specs.Options{
+		Generator: &specs.FlutterPubGenerator{},
+		ServerURL: serverBaseURL(cfg.Port),
+		Timeout:   cfg.SpecJobTimeout,
+		MaxJobs:   cfg.MaxSpecJobs,
+		MaxUpload: cfg.MaxSpecUploadBytes,
+	})
+	specService.Start()
+	defer specService.Stop()
+
 	mux := http.NewServeMux()
 
 	// Validator
@@ -68,7 +85,9 @@ func main() {
 	// Handlers
 	proxyHandler := proxy.NewProxyHandler(store, cfg.UpstreamProxy, validator)
 	uploadHandler := upload.NewUploadHandler(store)
-	dashboardHandler := dashboard.NewDashboardHandler(store)
+	dashboardHandler := dashboard.NewDashboardHandler(store, specService)
+	specHandler := specs.NewHandler(specService, cfg.MaxSpecUploadBytes)
+	specHandler.Register(mux)
 
 	// Routes
 	mux.Handle("/upload", uploadHandler)
@@ -89,5 +108,16 @@ func main() {
 	log.Printf("🚀 FlutterZakhireh is running on port: %s", cfg.Port)
 	log.Printf("📊 Dashboard: http://localhost%s", cfg.Port)
 	log.Printf("📦 Data directory: %s", cfg.DataDir)
+	log.Printf("📄 Specs directory: %s", cfg.SpecsDir)
 	log.Fatal(http.ListenAndServe(cfg.Port, server.AccessLogger(mux)))
+}
+
+// serverBaseURL derives the proxy's own base URL from the listen address so
+// spec generation jobs can point PUB_HOSTED_URL back at this proxy.
+func serverBaseURL(port string) string {
+	addr := port
+	if len(addr) > 0 && addr[0] == ':' {
+		addr = "127.0.0.1" + addr
+	}
+	return "http://" + addr
 }
