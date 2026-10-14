@@ -4,6 +4,9 @@
 /data/specs/
 nohup.out
 
+# Local deployment overrides (per-server mirror URLs, etc.)
+.env
+
 # Dependency directories (vendor)
 /vendor/
 

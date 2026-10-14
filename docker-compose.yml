@@ -27,7 +27,7 @@ services:
       # Or point at the SDK explicitly:
       # - FLUTTERZAKHIREH_FLUTTER_BIN=/opt/flutter/bin/flutter
       # Upstream to fetch packages from (default: pub.dev)
-      - FLUTTERZAKHIREH_UPSTREAM=https://pub.dev
+      - FLUTTERZAKHIREH_UPSTREAM=${FLUTTERZAKHIREH_UPSTREAM:-https://pub.dev}
       # Private package glob patterns (skip sumdb):
       # - FLUTTER_NO_SUMDB=*.corp.example.com
       # - FLUTTERZAKHIREH_ALLOW=my_private_pkg,my_other_pkg
